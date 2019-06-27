@@ -143,7 +143,7 @@ def Nash_Sutcliffe(SimulatedStreamFlow, ObservedStreamFlow):
     x=SimulatedStreamFlow
     y=ObservedStreamFlow
     A=0.0 #dominator
-    B=0.0 #deminator
+    B=0.0 #denominator
     tot = 0.0
     for i in range(0, len(y)):
         tot = tot + y[i]
@@ -160,7 +160,7 @@ def Log_Nash_Sutcliffe(SimulatedStreamFlow, ObservedStreamFlow):
     x=SimulatedStreamFlow
     y=ObservedStreamFlow
     A=0.0 #dominator
-    B=0.0 #deminator
+    B=0.0 #denominator
     tot = 0.0
     for i in range(0, len(y)):
         tot = tot + y[i]
@@ -183,14 +183,40 @@ def PercentBias(SimulatedStreamFlow, ObservedStreamFlow):
     x=SimulatedStreamFlow
     y=ObservedStreamFlow
     A=0.0 #dominator
-    B=0.0 #deminator
+    B=0.0 #denominator
     for i in range(0, len(y)):
         A = A + (y[i] - x[i])
         B = B + y[i]
     PB = 100.0*(A/B) # Percent Bias model eficiency coefficient
     return PB
 
-def CalculateObjectiveFunctions(population,Outlet_Obsdata,FuncOpt,FuncOptAvr,parname, generation,SWATdir):
+##Nitrate fertilizers management efficiency 
+def NitrateFunction(Nitout, NitObs):
+    '''(Nitout, NitObs)''' 
+    x=Nitout
+    y=NitObs
+    A=0.0 #numerator
+    B=1.0 #denominator
+    for i in range(0, len(y)):
+        A = A + (y[i] - x[i])
+    E = (A/B) # Maximization of the function
+    return E
+
+##Crop yield efficiency 
+def CYieldFunction(CyieldOut, CyieldObs):
+    '''(CyieldOut, CyieldObs)''' 
+    x=CyieldOut
+    y=CyieldObs
+    A=0.0 #numerator
+    B=1.0 #denominator
+    for i in range(0, len(y)):
+        A = A + (y[i] - x[i])
+    E = -(A/B) # Minimization of the function
+    return E
+
+
+#def CalculateObjectiveFunctions(population,Outlet_Obsdata,FuncOpt,FuncOptAvr,parname, generation,SWATdir):
+def CalculateObjectiveFunctions(population,HRU_Obsdata,FuncOpt,FuncOptAvr,parname, generation,SWATdir):
     nsga2utilities.round_parameters(population)
     os.chdir(SWATdir)
     #/*Initializing the max rank to zero*/
@@ -204,8 +230,10 @@ def CalculateObjectiveFunctions(population,Outlet_Obsdata,FuncOpt,FuncOptAvr,par
         ParameterValues.append(population["ind"][i]["xbin"]) #/* problem variables */
 
     #&&&& without pralel SWAT run &&&&&
-    outlets = list(Outlet_Obsdata.keys())
-    outlets.sort()
+    #outlets = list(Outlet_Obsdata.keys())
+    hrus = list(HRU_Obsdata.keys())
+    #outlets.sort()
+    #hrus.sort()
     for i in range(popsize): #population loop
         print ("\n"*5,"-"*45,"\nGeneration: ", generation, "  Simulation: ", i+1, "\n", "-"*45)
         #Print parameter set in model.in file
@@ -225,23 +253,31 @@ def CalculateObjectiveFunctions(population,Outlet_Obsdata,FuncOpt,FuncOptAvr,par
             os.system(SWATdir+'/nsga2_mid.cmd')
 
         #Read 'model.out' file
-        modelrchf = open(os.path.join(SWATdir,"model.out"),'r')
-        lines = modelrchf.readlines()
-        Outlet_Modeldata = {}
+        #modelrchf = open(os.path.join(SWATdir,"model.out"),'r')
+        modelhruf = open(os.path.join(SWATdir,"model.out"),'r')
+        #lines = modelrchf.readlines()
+        lines = modelhruf.readlines()
+        #Outlet_Modeldata = {}
+        HRU_Modeldata = {}
         k=0; Modeldata=[]
-        for outlet in outlets:
-            nofdatapoints = len(Outlet_Obsdata[outlet])
+        #for outlet in outlets:
+        for hru in hrus:
+            #nofdatapoints = len(Outlet_Obsdata[outlet])
+            nofdatapoints = len(HRU_Obsdata[hru])
             for j in range(k,k+nofdatapoints):
                 Modeldata.append(float(lines[j].split()[1]))
-            Outlet_Modeldata[outlet] = Modeldata
+            #Outlet_Modeldata[outlet] = Modeldata
+            HRU_Modeldata[hru] = Modeldata
             k = j+1
             Modeldata=[]
             
         #Calculate Objective functions for each site (gage)
         objectivefuncs = []
-        for outlet in outlets:
-            outflowSWAT = Outlet_Modeldata[outlet]
-            outflowUSGS = Outlet_Obsdata[outlet]
+        for hru in hrus:
+            #outflowSWAT = Outlet_Modeldata[outlet]
+            outflowSWAT = HRU_Modeldata[hru]
+            #outflowUSGS = Outlet_Obsdata[outlet]
+            outflowUSGS = HRU_Obsdata[hru]
             #Define x and y for model efficiency coefficients
             x = outflowSWAT #Simulated parameters
             y = outflowUSGS #Measured parameters
@@ -279,14 +315,22 @@ def CalculateObjectiveFunctions(population,Outlet_Obsdata,FuncOpt,FuncOptAvr,par
                 R20best = 1 - R2 #0 is the best and + 1 is the worst
                 objectivefuncs.append(E0best)
                 objectivefuncs.append(LE0best)
-                objectivefuncs.append(R20best)  
+                objectivefuncs.append(R20best)
+            if FuncOpt == 6:
+                E = NitrateFunction(x, y) #Nitrate model efficiency coefficient
+                E0best = E #0 is the best and +infinity is the worst
+                E2 = CYieldFunction(x, y) #Yield model efficiency coefficient
+                E0best2 = E2 #0 is the best and -infinity is the worst          
+                objectivefuncs.append(E0best)
+                objectivefuncs.append(E0best2)
         #Average objective functions
         nobjfunc_=1
         if FuncOpt==3 or FuncOpt==5:
             nobjfunc_=2
         if FuncOpt==4:
             nobjfunc_=3
-        nobjsite_=len(outlets)
+        #nobjsite_=len(outlets)
+        nobjsite_=len(hrus)
         newobjectivefuncs=[]
         if FuncOptAvr==1: #Average Objective sites
             for k in range(0,nobjfunc_):

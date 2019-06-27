@@ -1,8 +1,0 @@
-1     : number of observed variables
-
-output_rch_4              : this is the name of the file (output_rch) and the subbasin number to be included in the objective function
-3                       : number of data points for this variable as it follows below. First column is a sequential number from beginning of the simulation for each date (missing data: jumps to next available date), second column is variable name and date (format arbitrary), third column is variable value.
-01/01/2012|01/03/2012|2   :BeginDate|EndDate|ColumnNumber  (Date Format: MM/DD/YYYY; Column Number is in output.rch file as columnNumber=0 for area and 1 for the next and so on...)
-1	2012-01-01	0.42
-2	2012-01-02	0.50
-3	2012-01-03	0.45

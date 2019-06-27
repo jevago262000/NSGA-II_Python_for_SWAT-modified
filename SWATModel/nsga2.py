@@ -22,6 +22,7 @@ repeats for every generation.
 '''
 
 import copy, sys, numpy, os, random, shutil
+from collections import OrderedDict
 #from nsga2lib import nsga2utilities, SWATutilities
 import nsga2utilities, SWATutilities
 
@@ -31,7 +32,7 @@ class nsga2:
         """SWATtxtinout folder should have 'nsga.in' subfolder with nsga2 input files"""
         libpath = os.path.dirname(nsga2utilities.__file__)
         #Copy necessary files to SWAT directory (Operating Platform Specific)
-        shutil.copy2(os.path.join(libpath,"ScriptsForSWATtxt","Extract_rch.py"), SWATtxtinoutFolderDirectory)
+        #shutil.copy2(os.path.join(libpath,"ScriptsForSWATtxt","Extract_rch.py"), SWATtxtinoutFolderDirectory)
         shutil.copy2(os.path.join(libpath,"ScriptsForSWATtxt","SWAT_ParameterEdit.py"), SWATtxtinoutFolderDirectory)
         if "linux" in sys.platform.lower() or "darwin" in sys.platform.lower():
             print ("Operating System is {0}".format(sys.platform))
@@ -45,9 +46,11 @@ class nsga2:
             shutil.copy2(os.path.join(libpath,"ScriptsForSWATtxt","swat_edit.cmd"), SWATtxtinoutFolderDirectory)
             if not os.path.exists(os.path.join(SWATtxtinoutFolderDirectory, "NSGA2.IN")):
                 os.makedirs(os.path.join(SWATtxtinoutFolderDirectory, "NSGA2.IN"))
+            #if os.path.exists(os.path.join(SWATtxtinoutFolderDirectory, "NSGA2.OUT")):
+                #shutil.rmtree(os.path.join(SWATtxtinoutFolderDirectory, "NSGA2.OUT"))
             shutil.copy2(os.path.join(libpath,"ScriptsForSWATtxt","NSGA2.IN", "nsga2.def"), os.path.join(SWATtxtinoutFolderDirectory,"NSGA2.IN"))
             shutil.copy2(os.path.join(libpath,"ScriptsForSWATtxt","NSGA2.IN", "nsga2_par.def"), os.path.join(SWATtxtinoutFolderDirectory,"NSGA2.IN"))
-            shutil.copy2(os.path.join(libpath,"ScriptsForSWATtxt","NSGA2.IN", "observed_rch.txt"), os.path.join(SWATtxtinoutFolderDirectory,"NSGA2.IN"))
+            #shutil.copy2(os.path.join(libpath,"ScriptsForSWATtxt","NSGA2.IN", "observed_rch.txt"), os.path.join(SWATtxtinoutFolderDirectory,"NSGA2.IN"))
             #shutil.copy2(os.path.join(libpath,"ScriptsForSWATtxt","Swat_Edit.exe"), SWATtxtinoutFolderDirectory)
         else: #goes with windows for now
             shutil.copy2(os.path.join(libpath,"ScriptsForSWATtxt","nsga2_mid.cmd"), SWATtxtinoutFolderDirectory)
@@ -57,7 +60,8 @@ class nsga2:
         #Read ('nsga2.def') NSGA-II binary options input
         nsga2def = SWATtxtinoutFolderDirectory+"/NSGA2.IN/nsga2.def"
         nsga2pardef = SWATtxtinoutFolderDirectory+"/NSGA2.IN/nsga2_par.def"
-        observed_rch = SWATtxtinoutFolderDirectory+"/NSGA2.IN/observed_rch.txt"
+        #observed_rch = SWATtxtinoutFolderDirectory+"/NSGA2.IN/observed_rch.txt"
+        observed_hru = SWATtxtinoutFolderDirectory+"/GLUE.IN/observed_hru.txt"
         f = open(nsga2def, "r")
         lines = f.readlines()
         popsize = int(lines[1].split()[1]) #Population size (an even no.)
@@ -88,21 +92,28 @@ class nsga2:
             lim_b.append([float(lines[i+1].split()[1]),float(lines[i+1].split()[2])]) #lower & the upper limits of the %d variable\n"%(i+1)
         pmut_b = pmutprp * 1.0/chrom #the mutation probability for binary strings (between 0 and 1.0/chrom)
         f.close()
-        #Read 'observed_rch.txt'
-        f = open(observed_rch, "r")
+        #Read 'observed_hru.txt'
+        #f = open(observed_rch, "r")
+        f = open(observed_hru, "r")
         lines = f.readlines()
-        #Read Observed Streamflow
-        Outlet_Obsdata = {}; outlet = -99; nofdatapoint=-99;
+        #Read Observed NSURQ and YLD
+        #Outlet_Obsdata = {}; outlet = -99; nofdatapoint=-99;
+        HRU_Obsdata = OrderedDict(); hru = ''; nofdatapoint=-99;
         for i in range(0,len(lines)):
             try:
-                if lines[i][0:10:]=='output_rch':
-                    outlet = int(lines[i][11:16].split(" ")[0])
+                #if lines[i][0:10:]=='output_rch':
+                if lines[i][0:5:]=='NSURQ' or lines[i][0:3:]=='YLD':
+                    #outlet = int(lines[i][11:16].split(" ")[0])
+                    hru = (lines[i].split(" ")[0]).split("\t")[0]
                     nofdatapoint = int(lines[i+1].split(" ")[0])
                     Obsdata = []
-                    for j in range((i+3), (i+3+nofdatapoint)):
+                    #for j in range((i+3), (i+3+nofdatapoint)):
+                    for j in range((i+4), (i+4+nofdatapoint)):
                         Obsdata.append(float((lines[j].split("\t")[2]).split("\n")[0]))
-                    Outlet_Obsdata[outlet] = Obsdata
-            except: sys.exit("ERROR: check the 'observed_rch.txt' file (the gage on line:"+str(i)+")")
+                    #Outlet_Obsdata[outlet] = Obsdata
+                    HRU_Obsdata[hru] = Obsdata
+            #except: sys.exit("ERROR: check the 'observed_rch.txt' file (the gage on line:"+str(i)+")")
+            except: sys.exit("ERROR: check the 'observed_hru.txt' file (the gage on line:"+str(i)+")")
         #Calculate number of objective functions
         nfunc = 0 #no. of objective functions
         nsites = int(lines[0].split("  ")[0])
@@ -132,7 +143,8 @@ class nsga2:
         self.chrom=chrom
         self.lim_b=lim_b
         self.pmut_b=pmut_b
-        self.Outlet_Obsdata=Outlet_Obsdata
+        #self.Outlet_Obsdata=Outlet_Obsdata
+        self.HRU_Obsdata=HRU_Obsdata
         self.nfunc=nfunc
         self.SWATdir=SWATtxtinoutFolderDirectory
         #---
@@ -184,7 +196,8 @@ class nsga2:
             #Copy old output file
             shutil.copy2(self.SWATdir+"/NSGA2.OUT/output.out", self.SWATdir+"/NSGA2.OUT/output_previous.out")            
             #/*Function Calculaiton*/
-            SWATutilities.CalculateObjectiveFunctions(old_pop_ptr,self.Outlet_Obsdata,self.FuncOpt,self.FuncOptAvr,self.parname,"Previous NSGA-II run Last Population",self.SWATdir)
+            #SWATutilities.CalculateObjectiveFunctions(old_pop_ptr,self.Outlet_Obsdata,self.FuncOpt,self.FuncOptAvr,self.parname,"Previous NSGA-II run Last Population",self.SWATdir)
+            SWATutilities.CalculateObjectiveFunctions(old_pop_ptr,self.HRU_Obsdata,self.FuncOpt,self.FuncOptAvr,self.parname,"Previous NSGA-II run Last Population",self.SWATdir)
             
         else:
             #Defining Latin Hypercube Sampling population
@@ -206,7 +219,8 @@ class nsga2:
                     rndinteger = int(round(self.M*random.random(),0))
                     InitialLHSpop["ind"][i]["xbin"][j] = LHSamples[j][rndinteger]         
             #/*Function Calculaiton*/
-            SWATutilities.CalculateObjectiveFunctions(InitialLHSpop,self.Outlet_Obsdata,self.FuncOpt,self.FuncOptAvr,self.parname,"LHS",self.SWATdir)
+            #SWATutilities.CalculateObjectiveFunctions(InitialLHSpop,self.Outlet_Obsdata,self.FuncOpt,self.FuncOptAvr,self.parname,"LHS",self.SWATdir)
+            SWATutilities.CalculateObjectiveFunctions(InitialLHSpop,self.HRU_Obsdata,self.FuncOpt,self.FuncOptAvr,self.parname,"LHS",self.SWATdir)
             #Select the first population from InitialLHSpop
             n=0
             for rank in range(1,self.M+1):

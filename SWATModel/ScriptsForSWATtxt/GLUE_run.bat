@@ -1,7 +1,7 @@
 :: required
 python "D:\ToBackup\Documents\GitHub\NSGA-II_Python_for_SWAT-modified\SWATModel\ExampleTest.py"
 python "D:\ToBackup\Documents\GitHub\NSGA-II_Python_for_SWAT-modified\ExternalPythonScripts\CreateGlueFiles4VisualizationInSWAT-CUP.py"
-::python "D:\ToBackup\Documents\GitHub\NSGA-II_Python_for_SWAT-modified\ExternalPythonScripts\MoveGlueFilesInCorrespondingSWAT-CUPfolder.py"
+python "D:\ToBackup\Documents\GitHub\NSGA-II_Python_for_SWAT-modified\ExternalPythonScripts\MoveGlueFilesInCorrespondingSWAT-CUPfolder.py"
 
 
 

@@ -5,12 +5,14 @@ import shutil, sys, os
 script_location = os.path.dirname(sys.argv[0])
 
 #---- Input ----(space on directory may cause problems during execution)
-SWATtxtinoutDirectory = os.path.join(os.path.dirname(script_location),"SWATModel", "TxtInOut")
+#SWATtxtinoutDirectory = os.path.join(os.path.dirname(script_location),"SWATModel", "TxtInOut")
+#SWATtxtinoutDirectory = r"D:\proyectoSWATCUP\Prueba.Glue.SwatCup"
 GLUEdirectory = r'D:\proyectoSWATCUP\Prueba.Glue.SwatCup'
 #---------------
 
 #Define paths
-nsga2sourcePath=SWATtxtinoutDirectory+r'/SWAT-CUP_GLUE_files'
+#nsga2sourcePath=SWATtxtinoutDirectory+r'/SWAT-CUP_GLUE_files'
+nsga2sourcePath=GLUEdirectory+r'/SWAT-CUP_GLUE_files'
 glueinPaht=GLUEdirectory+r'/GLUE.IN'
 glueoutPaht=GLUEdirectory+r'/GLUE.OUT'
 

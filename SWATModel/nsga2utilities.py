@@ -420,7 +420,7 @@ def indcmp1(ptr1,ptr2,nfunc): #Used in NonDominatedSorting
 def NonDominatedSorting(gen,popsize,global_pop_ptr,nfunc,globalpop,SWATdir):#grank
     grankoutfile=os.path.join(SWATdir,"NSGA2.OUT","g_rank_record.out")
     gr = open(grankoutfile,"a");
-    gr.writelines("Genration no. = %d\n"%gen);
+    gr.writelines("Generation no. = %d\n"%gen);
     #/*----------------------------* RANKING *---------------------------------*/
     rnk = 0;
     nondom = 0;

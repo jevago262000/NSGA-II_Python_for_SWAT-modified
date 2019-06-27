@@ -22,15 +22,20 @@ NSGAII=nsga2.nsga2(SWATtxtinoutDirectory)
 parname=NSGAII.parname
 popsize=NSGAII.popsize
 ngener=NSGAII.ngener
-Outlet_Obsdata=NSGAII.Outlet_Obsdata
-Outlets=Outlet_Obsdata.keys()
+#Outlet_Obsdata=NSGAII.Outlet_Obsdata
+HRU_Obsdata=NSGAII.HRU_Obsdata
+#Outlets=Outlet_Obsdata.keys()
+hrus=HRU_Obsdata.keys()
 
 #======================== GLUE INPUTS ==========================
 #Prepare glue.inf file
-TotalNumberofObservedVariables=str(int(len(Outlet_Obsdata)))
+#TotalNumberofObservedVariables=str(int(len(Outlet_Obsdata)))
+TotalNumberofObservedVariables=str(int(len(HRU_Obsdata)))
 NumberOfDataPointsInEachVariable=''
-for outlet in Outlets:
-    NumberOfDataPointsInEachVariable+=str(int(len(Outlet_Obsdata[outlet])))+'  '
+#for outlet in Outlets:
+for hru in hrus:
+    #NumberOfDataPointsInEachVariable+=str(int(len(Outlet_Obsdata[outlet])))+'  '
+    NumberOfDataPointsInEachVariable+=str(int(len(HRU_Obsdata[hru])))+'  '
 NumberOfParameterToBeOptimized=str(int(len(parname)))    
 glueinflines=TotalNumberofObservedVariables.ljust(20,' ')+': total number of observed variables\n'
 glueinflines+=NumberOfDataPointsInEachVariable.ljust(20,' ')+': number of data points in each variable\n'
@@ -41,8 +46,10 @@ f.close()
 
 #Prepare var_file_name.txt file
 varfilelines=''
-for outlet in Outlets:
-    varfilelines+='FLOW_OUT_'+str(int(outlet))+'.txt\n'
+#for outlet in Outlets:
+for hru in hrus:
+    #varfilelines+='FLOW_OUT_'+str(int(outlet))+'.txt\n'
+    varfilelines+= str(hru)+'.txt\n'
 f=open(gluePath+'/var_file_name.txt','w')
 f.writelines(varfilelines[:-1])
 f.close()
@@ -50,9 +57,15 @@ f.close()
 
 #Prepare glue_obs.dat file
 glueobslines='number	data\n'
-for outlet in Outlets:
-    i=0
-    for value in Outlet_Obsdata[outlet]:
+#for outlet in Outlets:
+for hru in hrus:
+    ###################################################################################################################################
+    #IMPORTANT!! This number is not automatically written based on the real position/number (first column) in the file of observed data
+    ###################################################################################################################################
+    #i=0
+    i=36
+    #for value in Outlet_Obsdata[outlet]:
+    for value in HRU_Obsdata[hru]:
         i+=1
         glueobslines+=str(i)+'\t'+str(value)+'\n'
 f=open(gluePath+'/glue_obs.dat','w')
@@ -143,10 +156,12 @@ f.close()
 
 #------ Run SWAT ------
 os.chdir(SWATtxtinoutDirectory)
-outlets = Outlets
-outlets.sort()
+#outlets = Outlets
+#outlets.sort()
+#hrus.sort()
 def RunSWAT4ParameterSets(ParameterSets):
-    _Outlet_Modeldata=[] #Results are in parameter set order
+    #_Outlet_Modeldata=[] #Results are in parameter set order
+    _HRU_Modeldata=[] #Results are in parameter set order
     for parset in ParameterSets:
         #Print parameter set in model.in file
         modelinf = open(SWATtxtinoutDirectory+"\model.in","w")
@@ -158,44 +173,61 @@ def RunSWAT4ParameterSets(ParameterSets):
         #Run command file (SWATedit, SWAT and extract exe files)
         os.system(SWATtxtinoutDirectory+'/nsga2_mid.cmd')
         #Read 'model.out' file
-        modelrchf = open(SWATtxtinoutDirectory+'/model.out','r')
-        lines = modelrchf.readlines()
-        Outlet_Modeldata = {}
+        #modelrchf = open(SWATtxtinoutDirectory+'/model.out','r')
+        modelhruf = open(SWATtxtinoutDirectory+'/model.out','r')
+        #lines = modelrchf.readlines()
+        lines = modelhruf.readlines()
+        #Outlet_Modeldata = {}
+        HRU_Modeldata = {}
         k=0; Modeldata=[]
-        for outlet in outlets:
-            nofdatapoints = len(Outlet_Obsdata[outlet])
+        #for outlet in outlets:
+        for hru in hrus:
+            #nofdatapoints = len(Outlet_Obsdata[outlet])
+            nofdatapoints = len(HRU_Obsdata[hru])
             for j in range(k,k+nofdatapoints):
                 Modeldata.append(float(lines[j].split()[1]))
-            Outlet_Modeldata[outlet] = Modeldata
+            #Outlet_Modeldata[outlet] = Modeldata
+            HRU_Modeldata[hru] = Modeldata
             k = j+1
             Modeldata=[]
-        _Outlet_Modeldata.append(Outlet_Modeldata)
-    return _Outlet_Modeldata
+        #_Outlet_Modeldata.append(Outlet_Modeldata)
+        _HRU_Modeldata.append(HRU_Modeldata)
+    #return _Outlet_Modeldata
+    return _HRU_Modeldata
     
 print '\n'*5, "-"*45,"\nRunning SWAT for LHS parameter sets...\n", "-"*45
-LHS__Outlet_Modeldata=RunSWAT4ParameterSets(ParametersLHS)
+#LHS__Outlet_Modeldata=RunSWAT4ParameterSets(ParametersLHS)
+LHS__HRU_Modeldata=RunSWAT4ParameterSets(ParametersLHS)
 print '\n'*5, "-"*45,"\nRunning SWAT for Pareto parameter sets...\n", "-"*45
-Pareto__Outlet_Modeldata=RunSWAT4ParameterSets(ParametersPareto)
+#Pareto__Outlet_Modeldata=RunSWAT4ParameterSets(ParametersPareto)
+Pareto__HRU_Modeldata=RunSWAT4ParameterSets(ParametersPareto)
 print '\n'*5, "-"*45,"\nRunning SWAT for best parameter set...\n", "-"*45
-Best__Outlet_Modeldata=RunSWAT4ParameterSets([BestParameterSet])
+#Best__Outlet_Modeldata=RunSWAT4ParameterSets([BestParameterSet])
+Best__HRU_Modeldata=RunSWAT4ParameterSets([BestParameterSet])
 
 #Prepare modelres.beh file
 modelreslines=''
 #print LHS
 for i in xrange(popsize):
-    for outlet in outlets:
-        for val in LHS__Outlet_Modeldata[i][outlet]:
+    #for outlet in outlets:
+    for hru in hrus:
+        #for val in LHS__Outlet_Modeldata[i][outlet]:
+        for val in LHS__HRU_Modeldata[i][hru]:
             modelreslines+=str(val)+'\t'
     modelreslines+='\n'
 #print Pareto
 for i in xrange(popsize):
-    for outlet in outlets:
-        for val in Pareto__Outlet_Modeldata[i][outlet]:
+    #for outlet in outlets:
+    for hru in hrus:
+        #for val in Pareto__Outlet_Modeldata[i][outlet]:
+        for val in Pareto__HRU_Modeldata[i][hru]:
             modelreslines+=str(val)+'\t'
     modelreslines+='\n'
 #print Best
-for outlet in outlets:
-    for val in Pareto__Outlet_Modeldata[0][outlet]:
+#for outlet in outlets:
+for hru in hrus:
+    #for val in Pareto__Outlet_Modeldata[0][outlet]:
+    for val in Best__HRU_Modeldata[0][hru]:
         modelreslines+=str(val)+'\t'
 modelreslines+='\n'
 f=open(gluePath+'/modelres.beh','w')
