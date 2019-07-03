@@ -325,7 +325,7 @@ def CalculateObjectiveFunctions(population,HRU_Obsdata,FuncOpt,FuncOptAvr,parnam
                 objectivefuncs.append(E0best2)
         #Average objective functions
         nobjfunc_=1
-        if FuncOpt==3 or FuncOpt==5:
+        if FuncOpt==3 or FuncOpt==5 or FuncOpt==6:
             nobjfunc_=2
         if FuncOpt==4:
             nobjfunc_=3
