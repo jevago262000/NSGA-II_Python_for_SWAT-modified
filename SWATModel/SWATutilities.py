@@ -190,29 +190,40 @@ def PercentBias(SimulatedStreamFlow, ObservedStreamFlow):
     PB = 100.0*(A/B) # Percent Bias model eficiency coefficient
     return PB
 
-##Nitrate fertilizers management efficiency 
+
+##Nitrate fertilizers management and Crop yield efficiency 
+def OptimizationFunction(SimulatedValues, ObservededValues, Factor):
+    x=SimulatedValues
+    y=ObservededValues
+    PercFactor=Factor
+    A=0.0
+    for i in range(0, len(y)):
+        A = A + abs((PercFactor * y[i]) - x[i])
+    return A
+
+""" ##Nitrate fertilizers management efficiency 
 def NitrateFunction(Nitout, NitObs):
     '''(Nitout, NitObs)''' 
     x=Nitout
     y=NitObs
     A=0.0 #numerator
-    B=1.0 #denominator
+    PercFactor = 1.0 # To be changed according to the percentage to reduce simulated values
     for i in range(0, len(y)):
-        A = A + (y[i] - x[i])
-    E = (A/B) # Maximization of the function
-    return E
+        A = A + ((PercFactor * y[i]) - x[i])
+    E = A # Maximization of the function
+    return E """
 
-##Crop yield efficiency 
+""" ##Crop yield efficiency 
 def CYieldFunction(CyieldOut, CyieldObs):
     '''(CyieldOut, CyieldObs)''' 
     x=CyieldOut
     y=CyieldObs
     A=0.0 #numerator
-    B=1.0 #denominator
+    PercFactor = 1.0 # To be changed according to the percentage to increase simulated values
     for i in range(0, len(y)):
-        A = A + (y[i] - x[i])
-    E = -(A/B) # Minimization of the function
-    return E
+        A = A + ((PercFactor * y[i]) - x[i])
+    E = -A # Minimization of the function
+    return E """
 
 
 #def CalculateObjectiveFunctions(population,Outlet_Obsdata,FuncOpt,FuncOptAvr,parname, generation,SWATdir):
@@ -317,15 +328,17 @@ def CalculateObjectiveFunctions(population,HRU_Obsdata,FuncOpt,FuncOptAvr,parnam
                 objectivefuncs.append(LE0best)
                 objectivefuncs.append(R20best)
             if FuncOpt == 6:
-                E = NitrateFunction(x, y) #Nitrate model efficiency coefficient
-                E0best = E #0 is the best and +infinity is the worst
-                E2 = CYieldFunction(x, y) #Yield model efficiency coefficient
-                E0best2 = E2 #0 is the best and -infinity is the worst          
-                objectivefuncs.append(E0best)
-                objectivefuncs.append(E0best2)
+                if hru[0:3] == "NSU":
+                    PercFactor = 1.0 # Percentage to reduce simulated values
+                if hru[0:3] == "YLD":
+                    PercFactor = 1.0 # Percentage to increase simulated values
+                OV = OptimizationFunction(x, y, PercFactor) #Yield model efficiency coefficient
+                OV0best = OV #0 is the best and +infinity is the worst
+                objectivefuncs.append(OV0best)
+                
         #Average objective functions
         nobjfunc_=1
-        if FuncOpt==3 or FuncOpt==5 or FuncOpt==6:
+        if FuncOpt==3 or FuncOpt==5:
             nobjfunc_=2
         if FuncOpt==4:
             nobjfunc_=3
