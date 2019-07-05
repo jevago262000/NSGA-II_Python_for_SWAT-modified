@@ -192,7 +192,7 @@ def PercentBias(SimulatedStreamFlow, ObservedStreamFlow):
 
 
 ##Nitrate fertilizers management and Crop yield efficiency 
-def OptimizationFunction(SimulatedValues, ObservededValues, Factor):
+def ObjectiveFunction(SimulatedValues, ObservededValues, Factor):
     x=SimulatedValues
     y=ObservededValues
     PercFactor=Factor
@@ -332,7 +332,7 @@ def CalculateObjectiveFunctions(population,HRU_Obsdata,FuncOpt,FuncOptAvr,parnam
                     PercFactor = 1.0 # Percentage to reduce simulated values
                 if hru[0:3] == "YLD":
                     PercFactor = 1.0 # Percentage to increase simulated values
-                OV = OptimizationFunction(x, y, PercFactor) #Yield model efficiency coefficient
+                OV = ObjectiveFunction(x, y, PercFactor) #Yield model efficiency coefficient
                 OV0best = OV #0 is the best and +infinity is the worst
                 objectivefuncs.append(OV0best)
                 
