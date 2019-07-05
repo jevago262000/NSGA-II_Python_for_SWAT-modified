@@ -1,6 +1,6 @@
 #Prepare ouputs for SWAT-CUP glue file for visulization
 
-import os, sys
+import os, sys, math
 #from nsga2lib import nsga2
 script_location = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(os.path.dirname(script_location), "SWATModel"))
@@ -115,8 +115,8 @@ while i < len(lines):
         i += 10
         if i >= len(lines):#break if the loop is completed
             break
-    Objs1 = [float(x) for x in lines[i].split("\n")[0].split("|**|")[0].split(" ") if x!=""][prmtrno:-2] #Get Objective functions on line i before |**| (old population)
-    Objs2 = [float(x) for x in lines[i].split("\n")[0].split("|**|")[1].split(" ") if x!=""][prmtrno:-2] #Get Objective functions on line i after |**| (mate population)
+    Objs1 = [float(x) for x in lines[i].split("\n")[0].split("|**|")[0].split(" ") if (x!="" and x!="nan")][prmtrno:-2] #Get Objective functions on line i before |**| (old population)
+    Objs2 = [float(x) for x in lines[i].split("\n")[0].split("|**|")[1].split(" ") if (x!="" and x!="nan")][prmtrno:-2] #Get Objective functions on line i after |**| (mate population)
     #Calculate weights for Objs1 and Objs2 objective functions
     averageObj1=(sum(Objs1)/float(len(Objs1)))
     averageObj2=(sum(Objs2)/float(len(Objs2)))
@@ -136,23 +136,29 @@ modelparaline=''
 for pn in parname:
     modelparaline+=pn+'\t'
 modelparaline+='objfun\n'
+
+# Elimination of 'nan' values from list
+BestObjectiveSetNotNaN = [float(x) for x in BestObjectiveSet if not math.isnan(x)]
+
 #print LHS
 for i in xrange(popsize):
     for prmtr in ParametersLHS[i]:
         modelparaline+=str(prmtr)+'\t'
-    modelparaline+=str(sum(ObjectivesLHS[i])/float(len(ObjectivesLHS[i])))+'\n'
+    ObjectivesLHSNotNaN = [float(x) for x in ObjectivesLHS[i] if not math.isnan(x)] # Elimination of 'nan' values from list
+    modelparaline+=str(sum(ObjectivesLHSNotNaN)/float(len(ObjectivesLHSNotNaN)))+'\n'
 #print Pareto
 for i in xrange(popsize):
     for prmtr in ParametersPareto[i]:
         modelparaline+=str(prmtr)+'\t'
-    modelparaline+=str(sum(ObjectivesPareto[i])/float(len(ObjectivesPareto[i])))+'\n'
+    ObjectivesParetoNotNaN = [float(x) for x in ObjectivesPareto[i] if not math.isnan(x)] # Elimination of 'nan' values from list
+    modelparaline+=str(sum(ObjectivesParetoNotNaN)/float(len(ObjectivesParetoNotNaN)))+'\n'
 #print Best
 for prmtr in BestParameterSet:
     modelparaline+=str(prmtr)+'\t'
-modelparaline+=str(sum(BestObjectiveSet)/float(len(BestObjectiveSet)))+'\n'
+modelparaline+=str(sum(BestObjectiveSetNotNaN)/float(len(BestObjectiveSetNotNaN)))+'\n'
 f=open(gluePath+'/modelpara.beh','w')
 f.writelines(modelparaline)
-f.close() 
+f.close()
 
 #------ Run SWAT ------
 os.chdir(SWATtxtinoutDirectory)
