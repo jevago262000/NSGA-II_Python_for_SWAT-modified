@@ -72,7 +72,8 @@ class nsga2:
         pmutprp = float(lines[6].split()[1]) #Mutation prblty proportion range(between 0-1)
         seed = float(lines[7].split()[1]) #random seed(between 0 and 1)
         M = int(lines[8].split()[1])       #Number of Latin Hypercube Sampling intervals
-        FuncOpt = int(lines[9].split()[1]) #1=E; 2=R^2; 3=E,log E; 4=E,R^2,log E; 5=E,PB
+        #FuncOpt = int(lines[9].split()[1]) #1=E; 2=R^2; 3=E,log E; 4=E,R^2,log E; 5=E,PB
+        FuncOpt = int(lines[9].split()[1]) #1=E; 2=R^2; 3=E,log E; 4=E,R^2,log E; 5=E,PB; 6=Nitrate|Yield
         FuncOptAvr = int(lines[10].split()[1]) #0=Do not average; 1=Average Objective sites; 2=Average Objective Functions
         ReadMFrmOut = int(lines[11].split()[1]) #1= Read last population from output.out (use "1" when you want to re-start with same parameters defined in parameter file)
         f.close()
@@ -117,7 +118,7 @@ class nsga2:
         #Calculate number of objective functions
         nfunc = 0 #no. of objective functions
         nsites = int(lines[0].split("  ")[0])
-        if FuncOpt==1 or FuncOpt==2:
+        if FuncOpt==1 or FuncOpt==2 or FuncOpt==6:
             nfunc = nsites            
         if FuncOpt==3 or FuncOpt==5:
             nfunc = 2*nsites

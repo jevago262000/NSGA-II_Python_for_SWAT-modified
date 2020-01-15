@@ -1,0 +1,6 @@
+# These values define the months or period used to calculate the objective function. They depend on the observed values (i.e. observed_hru.txt).
+months_to_be_analyzed = 4,5,6,9,10
+initial_month = 1
+final_month = 12
+initial_year = 2015
+final_year = 2017

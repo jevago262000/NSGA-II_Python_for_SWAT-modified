@@ -1,7 +1,7 @@
 #Runs SWAT model with all solutions and calculate objective functions
 import numpy, os, math, sys
 #from nsga2lib import nsga2utilities
-import nsga2utilities
+import nsga2utilities, extract_period_analysis
 
 #-------------------------------------------------------------------------------
 #This functions will be used when ncons != 0 (number of Constraints is not zero).
@@ -271,6 +271,10 @@ def CalculateObjectiveFunctions(population,HRU_Obsdata,FuncOpt,FuncOptAvr,parnam
         #Outlet_Modeldata = {}
         HRU_Modeldata = {}
         k=0; Modeldata=[]
+
+        # Extract the values that define the period analysis
+        epd = extract_period_analysis.Get_Values("period_analysis.txt")
+
         #for outlet in outlets:
         for hru in hrus:
             #nofdatapoints = len(Outlet_Obsdata[outlet])
@@ -288,10 +292,13 @@ def CalculateObjectiveFunctions(population,HRU_Obsdata,FuncOpt,FuncOptAvr,parnam
             #outflowSWAT = Outlet_Modeldata[outlet]
             outflowSWAT = HRU_Modeldata[hru]
             #outflowUSGS = Outlet_Obsdata[outlet]
-            outflowUSGS = HRU_Obsdata[hru]
+            outflowObs = HRU_Obsdata[hru]
             #Define x and y for model efficiency coefficients
-            x = outflowSWAT #Simulated parameters
-            y = outflowUSGS #Measured parameters
+            #x = outflowSWAT #Simulated parameters
+            #y = outflowObs #Measured parameters
+
+            x = extract_period_analysis.Reduce(outflowSWAT, epd) #Simulated parameters reduced to the period analysis
+            y = extract_period_analysis.Reduce(outflowObs, epd) #Measured parameters reduced to the period analysis
 
             if FuncOpt == 1:
                 E = Nash_Sutcliffe(x,y) #Nash-Sutcliffe model efficiency coefficient
@@ -329,9 +336,9 @@ def CalculateObjectiveFunctions(population,HRU_Obsdata,FuncOpt,FuncOptAvr,parnam
                 objectivefuncs.append(R20best)
             if FuncOpt == 6:
                 if hru[0:3] == "NSU":
-                    PercFactor = 1.0 # Percentage to reduce simulated values
+                    PercFactor = 1.0 # Percentage to reduce simulated values (e.g. 0.9 reduces 10% the values of baseline)
                 if hru[0:3] == "YLD":
-                    PercFactor = 1.0 # Percentage to increase simulated values
+                    PercFactor = 1.0 # Percentage to increase simulated values (e.g. 1.1 increases 10% the values of baseline)
                 OV = ObjectiveFunction(x, y, PercFactor) #Yield model efficiency coefficient
                 OV0best = OV #0 is the best and +infinity is the worst
                 objectivefuncs.append(OV0best)
