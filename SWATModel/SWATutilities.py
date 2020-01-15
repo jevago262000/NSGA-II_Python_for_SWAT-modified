@@ -245,6 +245,10 @@ def CalculateObjectiveFunctions(population,HRU_Obsdata,FuncOpt,FuncOptAvr,parnam
     hrus = list(HRU_Obsdata.keys())
     #outlets.sort()
     #hrus.sort()
+
+    # Extract the values that define the period analysis
+    epd = extract_period_analysis.Get_Values("period_analysis.txt")
+
     for i in range(popsize): #population loop
         print ("\n"*5,"-"*45,"\nGeneration: ", generation, "  Simulation: ", i+1, "\n", "-"*45)
         #Print parameter set in model.in file
@@ -271,9 +275,6 @@ def CalculateObjectiveFunctions(population,HRU_Obsdata,FuncOpt,FuncOptAvr,parnam
         #Outlet_Modeldata = {}
         HRU_Modeldata = {}
         k=0; Modeldata=[]
-
-        # Extract the values that define the period analysis
-        epd = extract_period_analysis.Get_Values("period_analysis.txt")
 
         #for outlet in outlets:
         for hru in hrus:
